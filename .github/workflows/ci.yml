@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8
+        env:
+          MYSQL_USER: user
+          MYSQL_PASSWORD: password
+          MYSQL_DATABASE: testdb
+          MYSQL_ROOT_PASSWORD: rootpassword
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping"
+          --health-interval 10s
+          --health-timeout 10s
+          --health-retries 10
+
+    env:
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      MYSQL_DATABASE: testdb
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_HOST: localhost:3306
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v4
+        id: go
+        with:
+          go-version-file: "go.mod"
+
+      - name: Download dependencies
+        shell: bash
+        if: ${{ steps.go.outputs.cache-hit != 'true' }}
+        run: go mod download
+
+      - name: Install gotestsum
+        shell: bash
+        run: go install gotest.tools/gotestsum@latest
+
+      - name: Run tests (Multiple Databases)
+        working-directory: example
+        env:
+          TESTDB_ISOLATE: "true"
+        run: gotestsum --format testname -- -race -shuffle on -count 100 -failfast ./...
+
+      - name: Run tests (Single Database)
+        working-directory: example
+        run: gotestsum --format testname -- -race -shuffle on -count 100 -failfast ./...
