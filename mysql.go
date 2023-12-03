@@ -36,7 +36,7 @@ func TestWithMySQL() (*sqlx.DB, error) {
 		if query == "" {
 			continue
 		}
-		if _, err := db.DB.Exec(query); err != nil {
+		if _, err := db.Exec(query); err != nil {
 			return nil, fmt.Errorf("failed to migrate: %w", err)
 		}
 	}
