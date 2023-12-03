@@ -21,8 +21,6 @@ jobs:
           MYSQL_ROOT_PASSWORD: rootpassword
         ports:
           - 3306:3306
-        volumes:
-          - ../../example/schema.sql:/docker-entrypoint-initdb.d/schema.sql
         options: >-
           --health-cmd "mysqladmin ping"
           --health-interval 10s
@@ -52,6 +50,10 @@ jobs:
       - name: Install gotestsum
         shell: bash
         run: go install gotest.tools/gotestsum@latest
+
+      - name: Migrate database
+        working-directory: example
+        run: cat schema.sql | mysql -uroot -p${{ env.MYSQL_ROOT_PASSWORD }} -h127.0.0.1 ${{ env.MYSQL_DATABASE }}
 
       - name: Run tests (Multiple Databases)
         working-directory: example
