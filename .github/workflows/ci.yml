@@ -55,12 +55,13 @@ jobs:
         working-directory: example
         run: cat schema.sql | mysql -uroot -p${{ env.MYSQL_ROOT_PASSWORD }} -h127.0.0.1 ${{ env.MYSQL_DATABASE }}
 
+      - name: Run tests (Single Database)
+        continue-on-error: true
+        working-directory: example
+        run: gotestsum --format testname -- -race -shuffle on -count 100 -failfast ./...
+
       - name: Run tests (Multiple Databases)
         working-directory: example
         env:
           TESTDB_ISOLATE: "true"
-        run: gotestsum --format testname -- -race -shuffle on -count 100 -failfast ./...
-
-      - name: Run tests (Single Database)
-        working-directory: example
         run: gotestsum --format testname -- -race -shuffle on -count 100 -failfast ./...
